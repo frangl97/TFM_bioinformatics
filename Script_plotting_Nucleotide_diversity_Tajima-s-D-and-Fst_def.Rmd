@@ -1,0 +1,510 @@
+---
+title: "Analysis of Nucleotide Diversity (π) and Fixation index (Fst)"
+author: "Fco José Gómez"
+date: "2024-05-02"
+output:
+  html_document:
+    df_print: paged
+    highlight: kate
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/home/frangl97/Escritorio/Population_genomics_with_vcftools/Results")
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+# Introduction
+
+
+# Nucleotide diversity
+
+Nucleotide diversity (π) was calculated between species and between clusters
+
+## Nucleotide diversity between Almond and Peach species
+
+For calculating the nucleotide diversity of almond and peach samples it is needed to split the vcf file for almond and peach samples. For that, the command 'bcftools view -s is used.
+
+```{bash, eval=FALSE}
+# Obtain the vcf file for almond samples
+bcftools view -s Titan,Mono,Pfenziliana,A3,A48201,A48,Almnd2,Almnd3,Almnd6,Almnd7,Almnd9,Almnd10,Almnd12,Almnd13,Almnd14,Almnd15,Almnd16,Almnd11,Tardiveverdiere,Saintcharles,Ramillete,PrunusWebbiiM,Peraleja,Garrigues,G34,G20,G19,Almnd25,AtochaM,Beraude,Cotedor,DelCid /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf > Davis_Cebas_Inrae_geno_0_specie_almond_samples.vcf
+
+# Obtain the vcf file for peach samples
+bcftools view -s Pmira20A,Pmira19A,P54P455,P142,EL4,EL6,EL7 /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf > Davis_Cebas_Inrae_geno_0_specie_peach_samples.vcf
+```
+
+Once these files are obtained, the nucleotide diversity for each specie is calculated for a window of $10$ kb.
+
+
+```{bash, eval=FALSE}
+# Calculate the nucleotide diversity for almond
+vcftools --vcf Davis_Cebas_Inrae_geno_0_specie_almond_samples.vcf --window-pi 10000 --out Davis_Cebas_Inrae_nucleotide_diversity_specie_almond_window_10kb
+
+# Calculate the nucleotide diversity for peach
+vcftools --vcf Davis_Cebas_Inrae_geno_0_specie_peach_samples.vcf --window-pi 10000 --out Davis_Cebas_Inrae_nucleotide_diversity_specie_peach_window_10kb
+```
+
+Once the files are obtained, extract the information.
+
+```{r,eval=FALSE}
+# Load information of Almond and Peach diversity
+
+almond_diversity <- read.delim2("Davis_Cebas_Inrae_nucleotide_diversity_specie_almond_window_10kb.windowed.pi", header = TRUE)
+almond_diversity$PI <- as.numeric(almond_diversity$PI)
+
+peach_diversity <- read.delim2("Davis_Cebas_Inrae_nucleotide_diversity_specie_peach_window_10kb.windowed.pi", header = TRUE)
+peach_diversity$PI <- as.numeric(peach_diversity$PI)
+
+# Calculate the mean nucleotide diversity per specie
+
+almond_mean_nucl_div <- mean(almond_diversity$PI) * 1000 
+
+peach_mean_nucl_div <- mean(peach_diversity$PI)  * 1000
+
+# Rate
+almond_vs_peach_nucl_diversity <- round((almond_mean_nucl_div/peach_mean_nucl_div),2)
+
+cat ("The value of mean π for almonds is :", almond_mean_nucl_div, "\n")
+cat("The value of mean π for peach is", peach_mean_nucl_div, "\n")
+cat("The π rate between almond and peach is: ", almond_vs_peach_nucl_diversity, "\n")
+
+# Add a variable for identifying the specie
+
+almond_diversity$Specie <- "Almond"
+almond_diversity$Specie <- as.factor(almond_diversity$Specie)
+peach_diversity$Specie <- "Peach"
+peach_diversity$Specie <- as.factor(peach_diversity$Specie)
+```
+
+Create a boxplot for representing the nucleotide diversity
+
+```{r,eval=FALSE}
+# Create a boxplot for representing the nucleotide diversity of both species
+
+nucl_div_almond_vs_peach <- rbind(almond_diversity[,c("PI","Specie")], peach_diversity[,c("PI", "Specie")])
+
+nucl_div_almond_vs_peach$PI <- nucl_div_almond_vs_peach$PI *1000
+
+boxplot_almond_vs_peach_nucl_diversity <- ggplot(nucl_div_almond_vs_peach, aes(x=Specie, y =PI, fill = Specie)) + geom_boxplot() + labs(x="Specie", y= expression("π x " * 10^-3), title = "Nucleotide diversity between species") + scale_fill_manual(values = c("Almond" = "green", "Peach" = "orange")) + theme_test() + theme(legend.position = "none") 
+
+boxplot_almond_vs_peach_nucl_diversity
+# Save the boxplot 
+ggsave("boxplot_nucleotide_diversity_almond_vs_peach_window.png", boxplot_almond_vs_peach_nucl_diversity, width = 4, height = 3, units = "in")
+
+```
+
+For viewing the variation of π across the chromosomes for almond and peach samples, the normalized π was used.
+
+```{r,eval=FALSE}
+# Calculate the normalized nucleotide diversity for peach and almond. The normalised nucleotide diversity is calculated by x-mean(x)/sd(x)
+
+almond_diversity$norm_PI <- round((almond_diversity$PI-mean(almond_diversity$PI))/sd(almond_diversity$PI),5)
+peach_diversity$norm_PI <- round((peach_diversity$PI-mean(peach_diversity$PI))/sd(peach_diversity$PI),5)
+
+# Threshold for finding high or low significant nucleotide diversity regions = 95% (2.5% for each tail)
+threshold = round(qnorm(0.975),2)
+```
+
+## Nucleotide diversity for Almond samples
+
+Identify the significant regions for nucleotide diversity in almond.
+
+```{r, fig.height=10, fig.width=8, eval=FALSE}
+# Identify the Significance of the windows for nucleotide diversity
+almond_diversity$Significance <- ifelse(almond_diversity$norm_PI >= threshold, "High", ifelse(almond_diversity$norm_PI<= -threshold, "Low", "Not"))
+
+# View the summarize of the normalized nucleotide diversity values for establishing the limits of the plot
+summary(almond_diversity$norm_PI)
+
+# Print the plot
+plot_norm_nucl_div_almond <- ggplot(almond_diversity, aes(x=BIN_START/1e6, y= norm_PI, color=Significance )) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") +
+  theme_bw() + scale_y_continuous(limits = c(-3,9), breaks = seq(-3,9,1)) + 
+  scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + 
+  geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3) + 
+  scale_x_continuous(breaks =seq(floor(min(almond_diversity$BIN_START/1e6)), ceiling(max(almond_diversity$BIN_START/1e6)), by= 5)) + 
+  labs(x="Chromosome position (Mb)", y= "Normalized π", title = "Normalized nucleotide diversity (π) for Almond") + theme(legend.position = "none")
+summary(almond_diversity$norm_PI)
+plot_norm_nucl_div_almond
+
+#Save the plot 
+ggsave("plot_nucleotide_diversity_norm_almond_window.png", plot_norm_nucl_div_almond, width = 8, height = 10, units = "in")
+
+# Save the information
+write.csv(almond_diversity, "Almond_samples_nucleotide_diversity.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+# Information
+Information_almond_nucleotide_diversity <- as.data.frame(table(almond_diversity$Significance[almond_diversity$Significance != "Not"]))
+colnames(Information_almond_nucleotide_diversity) <- c("Significance", "Number of regions for almonds")
+Information_almond_nucleotide_diversity
+
+```
+
+
+
+## Nucleotide diversity for Peach samples
+
+Identify the significant regions for nucleotide diversity in peach.
+
+```{r,fig.width=8, fig.height=10,eval=FALSE}
+# Identify the Significance of the windows for nucleotide diversity
+peach_diversity$Significance <- ifelse(peach_diversity$norm_PI >= threshold, "High", ifelse(peach_diversity$norm_PI<= -threshold, "Low", "Not"))
+
+# View the summarize of the normalized nucleotide diversity values for establishing the limits of the plot
+summary(peach_diversity$norm_PI)
+
+# Print the plot
+plot_norm_nucl_div_peach <- ggplot(peach_diversity, aes(x=BIN_START/1e6, y= norm_PI, color=Significance)) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") +
+  theme_bw() + scale_y_continuous(limits = c(-3,13), breaks = seq(-3,13,2)) + 
+  scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + 
+  geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3) + 
+  scale_x_continuous(breaks =seq(floor(min(peach_diversity$BIN_START/1e6)), ceiling(max(peach_diversity$BIN_START/1e6)), by= 5)) + 
+  labs(x="Chromosome position (Mb)", y= "Normalized π", title = "Normalized nucleotide diversity (π) for Peach") + theme(legend.position = "none")
+
+plot_norm_nucl_div_peach
+
+#Save the plot 
+ggsave("plot_nucleotide_diversity_norm_peach.png", plot_norm_nucl_div_peach, width = 8, height = 10, units = "in")
+
+# Save the information
+write.csv(peach_diversity, "Peach_samples_nucleotide_diversity.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+# Information
+Information_peach_nucleotide_diversity <- as.data.frame(table(peach_diversity$Significance[peach_diversity$Significance != "Not"]))
+colnames(Information_peach_nucleotide_diversity) <- c("Significance", "Number of regions for peaches")
+Information_peach_nucleotide_diversity
+
+
+```
+
+## Nucleotide diversity for Cluster 2 and Cluster 3 samples
+
+For calculating the nucleotide diversity for samples within cluster 2, first it is needed to create a vcf file with the samples from cluster 2. For that, the command 'bcftools view -s' is used.
+
+```{bash, eval=FALSE}
+# Cluster 2 samples
+bcftools view -s Titan,Mono,Pfenziliana,A3,A48201,A48,Almnd2,Almnd3,Almnd6,Almnd7,Almnd9,Almnd10,Almnd12,Almnd13,Almnd14,Almnd15,Almnd16,Almnd11 /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf > Davis_Cebas_Inrae_geno_0_cluster_2_samples.vcf
+
+# Cluster 3 samples
+bcftools view -s Tardiveverdiere,Saintcharles,Ramillete,PrunusWebbiiM,Peraleja,Garrigues,G34,G20,G19,Almnd25,AtochaM,Beraude,Cotedor,DelCid /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf > Davis_Cebas_Inrae_geno_0_cluster_3_samples.vcf
+
+```
+
+Now calculate the nucleotide diversity with VCFtools.
+
+```{bash, eval=FALSE}
+# Nucleotide diversity cluster 2
+vcftools --vcf Davis_Cebas_Inrae_geno_0_cluster_2_samples.vcf --window-pi 10000 --out Davis_Cebas_Inrae_nucleotide_diversity_cluster_2_window_10kb
+
+#Nucleotide diversity cluster 3
+vcftools --vcf Davis_Cebas_Inrae_geno_0_cluster_3_samples.vcf --window-pi 10000 --out Davis_Cebas_Inrae_nucleotide_diversity_cluster_3_window_10kb
+```
+
+Load the data and extract the information.
+
+```{r,eval=FALSE}
+# Load information of cluster 2 and 3 diversity
+cluster2_diversity <- read.delim2("Davis_Cebas_Inrae_nucleotide_diversity_cluster_2_window_10kb.windowed.pi", header = TRUE)
+cluster2_diversity$PI <- as.numeric(cluster2_diversity$PI)
+
+cluster3_diversity <- read.delim2("Davis_Cebas_Inrae_nucleotide_diversity_cluster_3_window_10kb.windowed.pi", header = TRUE)
+cluster3_diversity$PI <- as.numeric(cluster3_diversity$PI)
+
+# Calculate the mean nucleotide diversity for cluster
+
+cluster2_mean_nucl_div <- mean(cluster2_diversity$PI) * 1000 
+cluster3_mean_nucl_div <- mean(cluster3_diversity$PI)  * 1000
+
+# Rate
+rate_cluster3_vs_cluster2 <- round((cluster3_mean_nucl_div/cluster2_mean_nucl_div),2)
+
+# Print the results
+cat ("The value of mean π for Cluster2 is :", cluster2_mean_nucl_div, "\n")
+cat("The value of mean π for Cluster 3 is", cluster3_mean_nucl_div, "\n")
+cat("The π rate between CLuster3 and Cluster2 is: ", rate_cluster3_vs_cluster2, "\n")
+
+
+# Add a variable for identifying the specie
+cluster2_diversity$Cluster <- "Cluster 2"
+cluster2_diversity$Cluster <- as.factor(cluster2_diversity$Cluster)
+cluster3_diversity$Cluster <- "Cluster 3"
+cluster3_diversity$Cluster <- as.factor(cluster3_diversity$Cluster)
+
+# Create a boxplot for representing the nucleotide diversity of both clusters
+
+nucl_div_clust2_vs_clust3 <- rbind(cluster2_diversity[,c("PI","Cluster")], cluster3_diversity[,c("PI","Cluster")])
+
+nucl_div_clust2_vs_clust3$PI <- nucl_div_clust2_vs_clust3$PI *1000
+
+boxplot_cluster2_vs_cluster3_nucl_diversity <- ggplot(nucl_div_clust2_vs_clust3, aes(x=Cluster, y =PI, fill = Cluster)) + geom_boxplot() + labs(x="Cluster", y= expression("π x " * 10^-3), title = "Nucleotide diversity between clusters") + scale_fill_manual(values = c("Cluster 2" = "blue", "Cluster 3" = "red")) + theme_test() + theme(legend.position = "none")
+boxplot_cluster2_vs_cluster3_nucl_diversity
+
+# Save the boxplot 
+ggsave("boxplot_nucleotide_diversity_cluster2_vs_cluster3.png", boxplot_cluster2_vs_cluster3_nucl_diversity, width = 4, height = 3, units = "in")
+```
+Normalizing the values for the nucleotide diversity and identifying the significant regions.
+
+```{r,fig.height=10, fig.width=8, eval=FALSE}
+# Calculate the normalized nucleotide diversity for cluster 2 and 3. The normalised nucleotide diversity is calculated by x-mean(x)/sd(x)
+
+cluster2_diversity$norm_PI <- round((cluster2_diversity$PI-mean(cluster2_diversity$PI))/sd(cluster2_diversity$PI),5)
+cluster3_diversity$norm_PI <- round((cluster3_diversity$PI-mean(cluster3_diversity$PI))/sd(cluster3_diversity$PI),5)
+
+# Threshold for finding high or low significant nucleotide diversity regions = 95% (2.5% for each tail)
+threshold = round(qnorm(0.975),2)
+
+# Identify the Significance of the windows for the normalised nucleotide diversity for cluster 2 and cluster 3
+cluster2_diversity$Significance <- ifelse(cluster2_diversity$norm_PI >= threshold, "High", ifelse(cluster2_diversity$norm_PI <=-threshold, "Low", "Not"))
+cluster3_diversity$Significance <- ifelse(cluster3_diversity$norm_PI >= threshold, "High", ifelse(cluster3_diversity$norm_PI <=-threshold, "Low", "Not"))
+# View the summarize of the normalized nucleotide diversity values for establishing the limits of the plot
+summary(cluster2_diversity$norm_PI)
+summary(cluster3_diversity$norm_PI)
+
+# Print the plot
+plot_norm_nucl_div_cluster2 <- ggplot(cluster2_diversity, aes(x=BIN_START/1e6, y= norm_PI, color=Significance )) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") +
+  theme_bw() + scale_y_continuous(limits = c(-3,10), breaks = seq(-3,10,1)) + 
+  scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + 
+  geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3) + 
+  scale_x_continuous(breaks =seq(floor(min(cluster2_diversity$BIN_START/1e6)), ceiling(max(cluster2_diversity$BIN_START/1e6)), by= 5)) + 
+  labs(x="Chromosome position (Mb)", y= "Normalized π", title = "Normalized nucleotide diversity (π) for Cluster 2") + theme(legend.position = "none")
+
+plot_norm_nucl_div_cluster2
+
+#Save the plot 
+ggsave("plot_nucleotide_diversity_norm_cluster2.png", plot_norm_nucl_div_cluster2, width = 8, height = 10, units = "in")
+
+# Information of Cluster 2
+Information_cluster2_nucleotide_diversity <- as.data.frame(table(cluster2_diversity$Significance[cluster2_diversity$Significance != "Not"]))
+colnames(Information_cluster2_nucleotide_diversity) <- c("Significance", "Number of regions for Cluster2")
+Information_cluster2_nucleotide_diversity
+
+```
+
+Do the plots
+
+```{r,eval=FALSE}
+
+plot_norm_nucl_div_cluster3 <- ggplot(cluster3_diversity, aes(x=BIN_START/1e6, y= norm_PI, color=Significance )) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") +
+  theme_bw() + scale_y_continuous(limits = c(-3,10), breaks = seq(-3,10,1)) + 
+  scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + 
+  geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3) + 
+  scale_x_continuous(breaks =seq(floor(min(cluster3_diversity$BIN_START/1e6)), ceiling(max(cluster3_diversity$BIN_START/1e6)), by= 5)) + 
+  labs(x="Chromosome position (Mb)", y= "Normalized π", title = "Normalized nucleotide diversity (π) for Cluster 3") + theme(legend.position = "none")
+
+plot_norm_nucl_div_cluster3
+
+#Save the plot 
+ggsave("plot_nucleotide_diversity_norm_cluster3.png", plot_norm_nucl_div_cluster3, width = 8, height = 10, units = "in")
+
+
+# Save the information
+write.csv(cluster2_diversity, "Cluster2_samples_nucleotide_diversity.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+write.csv(cluster3_diversity, "Cluster3_samples_nucleotide_diversity.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+
+
+#Information of Cluster 3
+Information_cluster3_nucleotide_diversity <- as.data.frame(table(cluster3_diversity$Significance[cluster3_diversity$Significance != "Not"]))
+colnames(Information_cluster3_nucleotide_diversity) <- c("Significance", "Number of regions for Cluster3")
+Information_cluster3_nucleotide_diversity
+```
+
+
+# Fixation index
+
+The fixation index (F<sub>ST</sub>) is the proportion of the total genetic variance contained  in a subpopulation relative to the total genetic variance of the population. The values of F<sub>ST</sub> can range between 0-1. High values of F<sub>ST</sub> indicates that the allele frequencies between subpopulations are high, while low values of F<sub>ST</sub> indicates that the allele frequency between subpopulations are similar.
+
+## F<sub>ST</sub> between Almond and Peach samples
+
+For calculating the F<sub>ST</sub> values for each variant, VCFtools was used.
+
+```{bash,eval=FALSE}
+# Calculate the Fst for each variant
+vcftools --vcf /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf --weir-fst-pop Almond_name_samples.txt --weir-fst-pop Peach_name_samples.txt --out Davis_Cebas_Inrae_almond_vs_peach_FST
+
+# Calculate the Fst for 10 kb window
+vcftools --vcf /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf --weir-fst-pop Almond_name_samples.txt --weir-fst-pop Peach_name_samples.txt --fst-window-size 10000 --out Davis_Cebas_Inrae_almond_vs_peach_FST_window_10kb
+
+```
+
+Now we analyse the results
+
+```{r,eval=FALSE}
+# Load the file with the Fst values for each variant
+Fst_variant_almond_peach_markers <- read.delim2("Davis_Cebas_Inrae_almond_vs_peach_FST.weir.fst", header = TRUE, sep = "\t")
+Fst_variant_almond_peach_markers$WEIR_AND_COCKERHAM_FST <- as.numeric(Fst_variant_almond_peach_markers$WEIR_AND_COCKERHAM_FST)
+
+# load the file with Fst values for each window
+Fst_variant_almond_peach_window <- read.delim2("Davis_Cebas_Inrae_almond_vs_peach_FST_window_10kb.windowed.weir.fst", header = TRUE, sep = "\t")
+Fst_variant_almond_peach_window$WEIGHTED_FST <- as.numeric(Fst_variant_almond_peach_window$WEIGHTED_FST)
+Fst_variant_almond_peach_window$MEAN_FST <- as.numeric(Fst_variant_almond_peach_window$MEAN_FST)
+
+#Calculate the mean of Fst
+mean_Fst_almond_vs_peach_markers <- mean(Fst_variant_almond_peach_markers$WEIR_AND_COCKERHAM_FST)
+mean_Fst_almond_vs_peach_window_weighted <- mean(Fst_variant_almond_peach_window$WEIGHTED_FST)
+
+#Print the mean of Fst
+cat ("The value of mean Fst for almonds and peach is:", mean_Fst_almond_vs_peach_markers, "\n")
+cat("The value of mean Fst weighted for almond and peach is:", mean_Fst_almond_vs_peach_window_weighted)
+
+# Omit markers that Fst has not been calculated
+Fst_variant_almond_and_peach_markers <- na.omit(Fst_variant_almond_peach_markers)
+
+```
+
+For identify the markers and regions with a high and a lower F<sub>ST</sub> the values were normalized, and a threshold for a 95% confidence interval was defined.
+
+```{r,eval=FALSE}
+# Calculate the standard dev
+sd_Fst_almond_vs_peach_window <- sd(Fst_variant_almond_peach_window$WEIGHTED_FST)
+sd_Fst_almond_vs_peach_markers <- sd(Fst_variant_almond_peach_markers$WEIR_AND_COCKERHAM_FST)
+
+# Normalized the values
+Fst_variant_almond_peach_markers$NORM_FST <- (Fst_variant_almond_peach_markers$WEIR_AND_COCKERHAM_FST - mean_Fst_almond_vs_peach_markers)/sd_Fst_almond_vs_peach_markers
+
+Fst_variant_almond_peach_window$NORM_FST <- (Fst_variant_almond_peach_window$WEIGHTED_FST - mean_Fst_almond_vs_peach_window_weighted)/sd_Fst_almond_vs_peach_window
+
+# Select the Significance of the markers and windows
+threshold = round(qnorm(0.975),2)
+
+Fst_variant_almond_peach_markers$Significance <- ifelse(Fst_variant_almond_peach_markers$NORM_FST >= threshold, "High", ifelse(Fst_variant_almond_peach_markers$NORM_FST <= -threshold, "Low", "Not"))
+
+Fst_variant_almond_peach_window$Significance <- ifelse(Fst_variant_almond_peach_window$NORM_FST >= threshold, "High", ifelse(Fst_variant_almond_peach_window$NORM_FST <= -threshold, "Low", "Not"))
+
+# Show the number of significant regions
+Information_almond_peach_fst_weighted_signf <- as.data.frame(table(Fst_variant_almond_peach_window$Significance[Fst_variant_almond_peach_window$Significance != "Not"]))
+colnames(Information_almond_peach_fst_weighted_signf) <- c("Significance", "Number of regions of Fst weighted between almond and peach samples")
+Information_almond_peach_fst_weighted_signf
+```
+
+Plotting the results for the significant F<sub>ST</sub> regions
+
+
+```{r,fig.height=10,fig.width=8,eval=FALSE}
+# Plot the Fst values
+plot_Fst_almond_vs_peach_window <- ggplot(Fst_variant_almond_peach_window, aes(x=BIN_START/1e6, y=WEIGHTED_FST)) + geom_line(size = 0.5, color = "red") + facet_wrap(~CHROM, ncol = 2, scale = "free_x") + theme_bw() + scale_x_continuous(breaks =seq(floor(min(Fst_variant_almond_peach_window$BIN_START/1e6)), ceiling(max(Fst_variant_almond_peach_window$BIN_START/1e6)), by= 5)) + labs(x="Chromosome position (Mb)", y=expression("F"[ST]), title = expression("F"[ST]*" between almond and peach samples")) + theme(legend.position = "none")
+
+plot_Fst_almond_vs_peach_window
+
+#Save the plot
+ggsave("plot_Fst_almond_vs_peach_window.png", plot_Fst_almond_vs_peach_window, width = 8, height = 10, units = "in")
+
+
+# Plot Fst values for window and Significance
+plot_Fst_almond_vs_peach_window_Significance <- ggplot(Fst_variant_almond_peach_window, aes(x=BIN_START/1e6, y=NORM_FST, col=Significance)) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") + theme_bw() +geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3)+ scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + scale_x_continuous(breaks =seq(floor(min(Fst_variant_almond_peach_window$BIN_START/1e6)), ceiling(max(Fst_variant_almond_peach_window$BIN_START/1e6)), by= 5)) + labs(x="Chromosome position (Mb)", y=expression("Normalized F"[ST]), title = expression("Normalized F"[ST]*" between almond and peach samples and Significance")) + theme(legend.position = "bottom")
+
+plot_Fst_almond_vs_peach_window_Significance
+
+# Save the plot
+ggsave("plot_Fst_almond_vs_peach_window.png", plot_Fst_almond_vs_peach_window, width = 8, height = 10, units = "in")
+ggsave("plot_Fst_almond_vs_peach_normalized_Significance.png", plot_Fst_almond_vs_peach_window_Significance, width = 8, height = 10, units = "in")
+
+#Save the information for markers
+write.csv(Fst_variant_almond_peach_markers, "Fst_variants_markers_almond_vs_peach.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+# Save the information for windows
+write.csv(Fst_variant_almond_peach_window, "Fst_variants_window_almond_vs_peach.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+```
+
+
+
+## F<sub>ST</sub> between Cluster 2 and Cluster 3
+
+```{bash,eval=FALSE}
+# Calculate the Fst between cluster 2 and 3 
+vcftools --vcf /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf --weir-fst-pop Cluster_2_name_samples.txt --weir-fst-pop Cluster_3_name_samples.txt --out Davis_Cebas_Inrae_Cluster2_vs_Cluster3_FST
+
+# Calculate the Fst for 10 kb window
+vcftools --vcf /home/frangl97/Escritorio/Population_genomics_with_vcftools/BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf --weir-fst-pop Cluster_2_name_samples.txt --weir-fst-pop Cluster_3_name_samples.txt --fst-window-size 10000 --out Davis_Cebas_Inrae_cluster2_vs_cluster3_FST_window_10kb
+```
+
+
+```{r,eval=FALSE}
+# Load the file with the Fst values for each variant
+Fst_variant_cluster_2_vs_cluster3_markers <- read.delim2("Davis_Cebas_Inrae_Cluster2_vs_Cluster3_FST.weir.fst", header = TRUE, sep = "\t")
+Fst_variant_cluster_2_vs_cluster3_markers$WEIR_AND_COCKERHAM_FST <- as.numeric(Fst_variant_cluster_2_vs_cluster3_markers$WEIR_AND_COCKERHAM_FST)
+
+# Omit markers that the Fst value was not calculated
+Fst_variant_cluster_2_vs_cluster3_markers <- na.omit(Fst_variant_cluster_2_vs_cluster3_markers)
+
+# load the file with Fst values for each window
+Fst_variant_cluster_2_vs_cluster3_window <- read.delim2("Davis_Cebas_Inrae_cluster2_vs_cluster3_FST_window_10kb.windowed.weir.fst", header = TRUE, sep = "\t")
+Fst_variant_cluster_2_vs_cluster3_window$WEIGHTED_FST <- as.numeric(Fst_variant_cluster_2_vs_cluster3_window$WEIGHTED_FST)
+Fst_variant_cluster_2_vs_cluster3_window$MEAN_FST <- as.numeric(Fst_variant_cluster_2_vs_cluster3_window$MEAN_FST)
+
+# Calculate the mean Fst values
+
+mean_fst_cluster2_vs_cluster3_markers <- mean(Fst_variant_cluster_2_vs_cluster3_markers$WEIR_AND_COCKERHAM_FST)
+mean_fst_cluster2_vs_cluster3_window_weighted <- mean(Fst_variant_cluster_2_vs_cluster3_window$WEIGHTED_FST)
+
+# Print the mean values
+cat ("The value of mean Fst for cluster 2 and 3 is: ", mean_fst_cluster2_vs_cluster3_markers, "\n")
+cat("The value of mean Fst weighted for cluster 2 and 3 is:", mean_fst_cluster2_vs_cluster3_window_weighted)
+
+# Calculate the standard dev
+sd_Fst_cluster2_vs_cluster3_window <- sd(Fst_variant_cluster_2_vs_cluster3_window$WEIGHTED_FST)
+sd_Fst_cluster2_vs_cluster3_markers <- sd(Fst_variant_cluster_2_vs_cluster3_markers$WEIR_AND_COCKERHAM_FST)
+
+# Normalized the values
+Fst_variant_cluster_2_vs_cluster3_markers$NORM_FST <- (Fst_variant_cluster_2_vs_cluster3_markers$WEIR_AND_COCKERHAM_FST - mean_fst_cluster2_vs_cluster3_markers)/sd_Fst_cluster2_vs_cluster3_markers
+
+Fst_variant_cluster_2_vs_cluster3_window$NORM_FST <- (Fst_variant_cluster_2_vs_cluster3_window$WEIGHTED_FST - mean_fst_cluster2_vs_cluster3_window_weighted)/sd_Fst_cluster2_vs_cluster3_window
+
+# Select the Significance of the markers and windows
+threshold = round(qnorm(0.975),2)
+
+Fst_variant_cluster_2_vs_cluster3_markers$Significance <- ifelse(Fst_variant_cluster_2_vs_cluster3_markers$NORM_FST >= threshold, "High", ifelse(Fst_variant_cluster_2_vs_cluster3_markers$NORM_FST <= -threshold, "Low", "Not"))
+
+Fst_variant_cluster_2_vs_cluster3_window$Significance <- ifelse(Fst_variant_cluster_2_vs_cluster3_window$NORM_FST >= threshold, "High", ifelse(Fst_variant_cluster_2_vs_cluster3_window$NORM_FST <= -threshold, "Low", "Not"))
+
+# Show the number of significant regions
+Information_cluster2_cluster3_fst_weighted_signf <- as.data.frame(table(Fst_variant_cluster_2_vs_cluster3_window$Significance[Fst_variant_cluster_2_vs_cluster3_window$Significance != "Not"]))
+colnames(Information_cluster2_cluster3_fst_weighted_signf) <- c("Significance", "Number of regions of Fst weighted between Cluster2 and Cluster3 samples")
+Information_cluster2_cluster3_fst_weighted_signf
+
+```
+
+Plooting the F<sub>ST</sub> significant regions between Cluster2 and Cluster3
+
+```{r,fig.height=10, fig.width=8,eval=FALSE}
+# Plot the Fst by windows
+plot_Fst_cluster2_vs_cluster3_window <- ggplot(Fst_variant_cluster_2_vs_cluster3_window, aes(x=BIN_START/1e6, y=WEIGHTED_FST)) + geom_line(size = 0.5, color = "red") + facet_wrap(~CHROM, ncol = 2, scale = "free_x") + theme_bw() +
+  scale_x_continuous(breaks =seq(floor(min(Fst_variant_cluster_2_vs_cluster3_window$BIN_START/1e6)), ceiling(max(Fst_variant_cluster_2_vs_cluster3_window$BIN_START/1e6)), by= 5)) + labs(x="Chromosome position (Mb)", y=expression("F"[ST]), title = expression("F"[ST]*" between Cluster 2 and 3 samples")) + theme(legend.position = "none")
+
+plot_Fst_cluster2_vs_cluster3_window
+
+# Plot Fst values for window and Significance
+plot_Fst_cluster2_vs_cluster3_window_Significance <- ggplot(Fst_variant_cluster_2_vs_cluster3_window, aes(x=BIN_START/1e6, y=NORM_FST, col=Significance)) + geom_point(size = 0.5) + facet_wrap(~CHROM, ncol = 2, scale = "free_x") + theme_bw() +geom_hline(yintercept = c(threshold,-threshold), linetype = "dashed", size = 0.3)+ scale_color_manual(values = c("Not" = "lightgrey", "High" = "red", "Low" = "blue")) + scale_x_continuous(breaks =seq(floor(min(Fst_variant_cluster_2_vs_cluster3_window$BIN_START/1e6)), ceiling(max(Fst_variant_cluster_2_vs_cluster3_window$BIN_START/1e6)), by= 5)) + labs(x="Chromosome position (Mb)", y=expression("Normalized F"[ST]), title = expression("Normalized F"[ST]*" between Cluster2 and Cluster3 samples and Significance")) + theme(legend.position = "bottom")
+
+plot_Fst_cluster2_vs_cluster3_window_Significance
+
+# Save the plot
+ggsave("plot_Fst_cluster2_vs_cluster3_window.png", plot_Fst_cluster2_vs_cluster3_window, width = 8, height = 10, units = "in")
+ggsave("plot_Fst_cluster2_vs_cluster3_window_Significance.png", plot_Fst_cluster2_vs_cluster3_window_Significance, width = 8, height = 10, units = "in")
+
+#Save the information
+write.csv(Fst_variant_cluster_2_vs_cluster3_window, "Fst_variant_cluster_2_vs_cluster3_window.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+# Save the information
+write.csv(Fst_variant_cluster_2_vs_cluster3_markers, "Fst_variant_markers_cluster_2_vs_cluster3.csv", sep =",", dec = ".", col.names = TRUE, 
+           row.names = FALSE)
+
+
+```
+

@@ -1,0 +1,259 @@
+---
+title: "PCA, Heatmap and Dendograms of Davis, Cebas and Inrae"
+author: "Fco José Gómez"
+date: "2024-04-04"
+output:
+  html_document:
+    df_print: paged
+    highlight: kate
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/home/frangl97/Escritorio/Inferring_population_structure_Davis_Cebas_Inrae/")
+
+```
+
+# INTRODUCTION
+
+```{r}
+library(SNPRelate)
+library(dplyr)
+library(ggrepel)
+library(gplots)
+library(heatmaply)
+```
+
+
+In this section the VCF file with the variants identificated in all the samples will be analised.
+
+```{r}
+
+fn <- "BCF_file_merge_Davis_Cebas_Inrae_filtered_by_chr_dp_1_renamed_set_ids_dp_qual_60_maf_geno_0_ld_renamed_def.vcf"
+```
+
+
+
+## Generation of the gds file
+
+In this section I transform the VCF file into a GDS file, as well as I renamed the samples due to PLINK modified the names of the samples.
+
+```{r, eval=FALSE}
+# Convert the VCF file into gds
+snpgdsVCF2GDS(fn, "Davis_Cebas_Inrae_merge_file_filtered_geno_0_renamed.gds")
+```
+
+
+
+## Analysing the gds file 
+
+In this section the gds file generated before will be analysed. First of all, the file generated before has to be load again. Secondly, I identified the set of SNPs that will be used to perform the analysis.
+
+```{r}
+# Load the file
+genome_file_geno_0 <- snpgdsOpen("Davis_Cebas_Inrae_merge_file_filtered_geno_0_renamed.gds")
+
+#Set the snps
+snpset_geno_0 = read.gdsn(index.gdsn(genome_file_geno_0, "snp.id"))
+
+cat("The SNP set for doing the analysis have", length(snpset_geno_0), "SNPs")
+
+```
+
+### PCA plot for Davis, Cebas and Inrae samples
+
+For doing the PCA, the function "snpgdsPCA" from *SNPRelate* package was used. 
+
+```{r}
+# Do PCA. The SNPs used are the set of SNPs selected before
+pca <- snpgdsPCA(genome_file_geno_0, snp.id=snpset_geno_0, autosome.only = FALSE)
+
+# Obtain a list of the samples 
+samples <- read.gdsn(index.gdsn(genome_file_geno_0, "sample.id"))
+
+# Variance of each PC
+var_exp <- pca$varprop
+
+#Variance explained for PC1 and PC2
+var_exp_pc1_pc2 <- sum(round(var_exp[1] * 100, 2), round(var_exp[2] * 100, 2))
+
+cat("Variance explained by the two first Principal Components:", var_exp_pc1_pc2)
+
+tab <- data.frame(sample.id = pca$sample.id,
+                  EV1 = pca$eigenvect[,1],    # the first eigenvector
+                  EV2 = pca$eigenvect[,2],    # the second eigenvector
+                  EV3 = pca$eigenvect[,3],    # the third eigenvector
+                  stringsAsFactors = FALSE)
+
+
+#Load the file with information of specie and origin of the samples
+species_and_origins <- read.delim2("species_and_origin_Davis_cebas_and_inrae_samples.txt", header = FALSE, sep = ",")
+colnames(species_and_origins) <- c("sample.id", "Specie", "Origin")
+
+#Add these information to the PCA results
+tab <- tab %>% left_join(species_and_origins, by="sample.id")
+
+tab
+```
+
+#### PCA plot PC1 vs PC2 for Davis, Cebas and Inrae samples
+
+```{r}
+
+PCA_PC1_vs_PC2_with_tags <- ggplot(tab, aes(x = EV1, y = EV2, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +  
+  geom_text_repel(aes(label = sample.id), size = 3, max.overlaps = 20) +
+  labs(x = paste0("PC1 (", round(var_exp[1] * 100, 2), "%)"), 
+       y = paste0("PC2 (", round(var_exp[2] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC1 vs PC2") 
+
+PCA_PC1_vs_PC2_with_tags
+
+ggsave("PCA_PC1_vs_PC2_with_tags.png", PCA_PC1_vs_PC2_with_tags, width = 9, height = 8, units = "in")
+
+PCA_PC1_vs_PC2_without_tags <- ggplot(tab, aes(x = EV1, y = EV2, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +
+  labs(x = paste0("PC1 (", round(var_exp[1] * 100, 2), "%)"), 
+       y = paste0("PC2 (", round(var_exp[2] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC1 vs PC2")
+
+PCA_PC1_vs_PC2_without_tags
+
+ggsave("PCA_PC1_vs_PC2_without_tags.png", PCA_PC1_vs_PC2_without_tags, width = 9, height = 8, units = "in")
+```
+
+
+#### PCA plot PC1 vs PC3 for Davis, Cebas and Inrae samples
+
+```{r}
+
+PCA_PC1_vs_PC3_with_tags <- ggplot(tab, aes(x = EV1, y = EV3, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +  
+  geom_text_repel(aes(label = sample.id), size = 3, max.overlaps = 20) +
+  labs(x = paste0("PC1 (", round(var_exp[1] * 100, 2), "%)"), 
+       y = paste0("PC3 (", round(var_exp[3] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC1 vs PC3")
+
+PCA_PC1_vs_PC3_with_tags
+
+ggsave("PCA_PC1_vs_PC3_with_tags.png", PCA_PC1_vs_PC3_with_tags, width = 9, height = 8, units = "in")
+
+PCA_PC1_vs_PC3_without_tags <- ggplot(tab, aes(x = EV1, y = EV3, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +
+  labs(x = paste0("PC1 (", round(var_exp[1] * 100, 2), "%)"), 
+       y = paste0("PC3 (", round(var_exp[3] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC1 vs PC3")
+
+PCA_PC1_vs_PC3_without_tags
+
+ggsave("PCA_PC1_vs_PC3_without_tags.png", PCA_PC1_vs_PC3_without_tags, width = 9, height = 8, units = "in")
+```
+
+
+
+#### PCA plot PC2 vs PC3 for Davis, Cebas and Inrae samples
+
+```{r}
+
+PCA_PC2_vs_PC3_with_tags <- ggplot(tab, aes(x = EV2, y = EV3, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +  
+  geom_text_repel(aes(label = sample.id), size = 3, max.overlaps = 20) +
+  labs(x = paste0("PC2 (", round(var_exp[2] * 100, 2), "%)"), 
+       y = paste0("PC3 (", round(var_exp[3] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC2 vs PC3")
+
+PCA_PC2_vs_PC3_with_tags
+
+ggsave("PCA_PC2_vs_PC3_with_tags.png", PCA_PC2_vs_PC3_with_tags, width = 9, height = 8, units = "in")
+
+PCA_PC2_vs_PC3_without_tags <- ggplot(tab, aes(x = EV2, y = EV3, color = Origin, shape= Specie)) +
+  geom_point(size = 2.5) +
+  labs(x = paste0("PC2 (", round(var_exp[2] * 100, 2), "%)"), 
+       y = paste0("PC3 (", round(var_exp[3] * 100, 2), "%)")) +
+  scale_color_manual(values = c("USA" = "darkblue", "France" = "#6ABAEB", "Spain" = "red", "Peach" = "orange", "MissionxP.webbii" = "purple", "P.webbii" = "#EB22CD", "Italian" = "#459F1F", "P.fenziliana" = "brown")) + scale_shape_manual(values = c("Almond" = 16, "Peach" = 17)) +
+  theme_bw() +
+  theme(legend.position = "right") + ggtitle("PCA Plot: PC2 vs PC3")
+
+PCA_PC2_vs_PC3_without_tags
+
+ggsave("PCA_PC2_vs_PC3_without_tags.png", PCA_PC2_vs_PC3_without_tags, width = 9, height = 8, units = "in")
+```
+
+
+### Heatmap for Davis, Cebas and Inrae samples 
+
+```{r}
+ibs <- snpgdsIBS(genome_file_geno_0, num.thread=2, autosome.only = FALSE)
+pop.idx <- order(samples)
+
+ibs_matrix <- ibs$ibs
+colnames(ibs_matrix) <- pop.idx
+
+heatmap_fig <- heatmaply(ibs$ibs[pop.idx, pop.idx], 
+                  col = heat.colors(256),  #colors of the heatmap
+                  show_colnames = FALSE, labRow = samples[pop.idx], labCol = samples[pop.idx], cexRow = 0.6, cexCol = 0.6, main = "Heatmap of Identity-By-State Analysis") 
+
+# Save the distance matrix
+
+ibs_matrix_2 <- ibs$ibs[pop.idx,pop.idx]
+
+colnames(ibs_matrix_2) <- samples[pop.idx]
+
+rownames(ibs_matrix_2) <- samples[pop.idx]
+
+#sample pairs
+pairs_list <- list()
+
+#Obtain all the possible combinations
+sample_pairs <- combn(samples[pop.idx],2)
+
+# Iterate for each pair of samples for obtaining the IBS coefficient
+for (i in 1:ncol(sample_pairs)) {
+  sample1 <- sample_pairs[1,i]
+  sample2 <- sample_pairs[2,i]
+  ibs_value <- ibs_matrix_2[sample1,sample2]
+  
+  pairs_list[[i]] <- c(sample1, sample2, ibs_value)
+}
+
+pairs_df <- as.data.frame(do.call(rbind,pairs_list))
+colnames(pairs_df) <- c("Sample1", "Sample2", "IBS")
+
+pairs_df
+
+write.csv(pairs_df, "IBS_comparisons.csv", dec = ".", col.names = TRUE, row.names = FALSE)
+
+heatmap_fig
+```
+
+
+### Dendogram for Davis, Cebas and Inrae samples
+
+```{r}
+ibs.hc <- snpgdsHCluster(snpgdsIBS(genome_file_geno_0, num.thread=2, autosome.only = FALSE))
+
+rv <- snpgdsCutTree(ibs.hc)
+
+plot_dendogram <- plot(rv$dendrogram, main="Davis, Cebas and Inrae samples")
+
+plot_dendogram
+
+ggsave("plot_dendogram.png", plot = plot_dendogram, device = "png", width = 8, height = 5)
+
+snpgdsClose(genome_file_geno_0)
+```
+
