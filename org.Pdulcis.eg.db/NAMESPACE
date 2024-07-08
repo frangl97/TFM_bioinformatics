@@ -1,0 +1,16 @@
+import(methods)
+import(AnnotationDbi)
+
+### Only put what is statically exported here. All the AnnObj instances
+### created at load time are dynamically exported (refer to R/zzz.R for
+### the details).
+export(
+    org.Pdulcis.eg,
+    org.Pdulcis.eg_dbconn,
+    org.Pdulcis.eg_dbfile,
+    org.Pdulcis.eg_dbschema,
+    org.Pdulcis.eg_dbInfo,
+
+    org.Pdulcis.egORGANISM
+)
+

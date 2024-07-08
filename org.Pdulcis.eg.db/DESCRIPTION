@@ -1,0 +1,13 @@
+Package: org.Pdulcis.eg.db
+Title: Genome wide annotation for Prunus dulcis
+Description: Genome wide annotation for Prunus dulcis, primarily based on mapping using Entrez Gene identifiers.
+Version: 0.1
+Author: Fco Jose Gomez Lopez
+Maintainer: Fco Jose Gomez Lopez <franjgolo97@gmail.com>
+Depends: R (>= 2.7.0), methods, AnnotationDbi (>= 1.60.2)
+Suggests: DBI, annotate, RUnit
+License: Artistic-2.0
+organism: Prunus dulcis
+species: Prunus dulcis
+biocViews: OrgDb, annotation
+
