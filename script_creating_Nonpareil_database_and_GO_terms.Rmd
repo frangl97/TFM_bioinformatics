@@ -164,46 +164,6 @@ head(high_nucl_div_almonds,30)
 # Obtain a list with the Prudus ids
 list_high_nucl_div_almonds <- high_nucl_div_almonds$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-
-ggo_high_nucl_div_almonds_bp_lv7 <- groupGO(gene  =  list_high_nucl_div_almonds,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_high_nucl_div_almonds_mf_lv4 <- groupGO(gene  =  list_high_nucl_div_almonds,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_nucl_div_almonds_cc_lv4 <- groupGO(gene  =  list_high_nucl_div_almonds,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_nucl_div_almonds_bp_lv7 <-  barplot(ggo_high_nucl_div_almonds_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_almonds_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_nucl_div_almonds_mf_lv4 <-  barplot(ggo_high_nucl_div_almonds_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_almonds_mf_lv4
-
-# Barplot of cellular components
-barplot_ggo_high_nucl_div_almonds_cc_lv4 <-  barplot(ggo_high_nucl_div_almonds_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_almonds_cc_lv4
-
 
 # Perform a enrichment analysis for high nucleotide diversity regions in almond. Use the Biological Process as ontology
 ego_high_nucl_diversity_almond <- enrichGO(gene = list_high_nucl_div_almonds,
@@ -219,12 +179,6 @@ ego_high_nucl_diversity_almond <- enrichGO(gene = list_high_nucl_div_almonds,
 head(ego_high_nucl_diversity_almond)
 
 # Save the results
-
-ggsave("C:/Users/franc/OneDrive - UNIVERSIDAD DE MURCIA/MÁSTER BIOINFORMATICA/TFM_Bioinformatica/Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_almond_nucleotide_diversity.png", barplot_ggo_high_nucl_div_almonds_bp_lv7,)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_almond_nucleotide_diversity.png",barplot_ggo_high_nucl_div_almonds_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_almond_nucleotide_diversity.png",barplot_ggo_high_nucl_div_almonds_cc_lv4)
 
 write.csv(ego_high_nucl_diversity_almond, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_Almond_high_nucl_diversity.csv")
 
@@ -248,46 +202,6 @@ head(high_nucl_div_peach,30)
 # Obtain a list with the Prudus ids
 list_high_nucl_div_peach <- high_nucl_div_peach$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-
-ggo_high_nucl_div_peach_bp_lv7 <- groupGO(gene  =  list_high_nucl_div_peach,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_high_nucl_div_peach_mf_lv4 <- groupGO(gene  =  list_high_nucl_div_peach,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_nucl_div_peach_cc_lv4 <- groupGO(gene  =  list_high_nucl_div_peach,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_nucl_div_peach_bp_lv7 <-  barplot(ggo_high_nucl_div_peach_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_peach_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_nucl_div_peach_mf_lv4 <-  barplot(ggo_high_nucl_div_peach_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_peach_mf_lv4
-
-# Barplot of cellular components
-barplot_ggo_high_nucl_div_peach_cc_lv4 <-  barplot(ggo_high_nucl_div_peach_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_peach_cc_lv4
-
 
 # Perform a enrichment analysis for high nucleotide diversity regions in almond. Use the Biological Process as ontology
 ego_high_nucl_diversity_peach <- enrichGO(gene = list_high_nucl_div_peach,
@@ -302,13 +216,6 @@ ego_high_nucl_diversity_peach <- enrichGO(gene = list_high_nucl_div_peach,
 # View the results
 head(ego_high_nucl_diversity_peach)
 
-# Save the results
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_peach_nucleotide_diversity.png", barplot_ggo_high_nucl_div_peach_bp_lv7,)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_peach_nucleotide_diversity.png", barplot_ggo_high_nucl_div_peach_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_peach_nucleotide_diversity.png", barplot_ggo_high_nucl_div_peach_cc_lv4)
 
 write.csv(ego_high_nucl_diversity_peach, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_peach_high_nucl_diversity.csv")
 
@@ -334,46 +241,6 @@ head(high_nucl_div_cluster2,30)
 # Obtain a list with the Prudus ids
 list_high_nucl_div_cluster2 <- high_nucl_div_cluster2$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-
-ggo_high_nucl_div_cluster2_bp_lv7 <- groupGO(gene  =  list_high_nucl_div_cluster2,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_high_nucl_div_cluster2_mf_lv4 <- groupGO(gene  =  list_high_nucl_div_cluster2,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_nucl_div_cluster2_cc_lv4 <- groupGO(gene  =  list_high_nucl_div_cluster2,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_nucl_div_cluster2_bp_lv7 <-  barplot(ggo_high_nucl_div_cluster2_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster2_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_nucl_div_cluster2_mf_lv4 <-  barplot(ggo_high_nucl_div_cluster2_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster2_mf_lv4
-
-# Barplot of cellular components
-barplot_ggo_high_nucl_div_cluster2_cc_lv4 <-  barplot(ggo_high_nucl_div_cluster2_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster2_cc_lv4
-
 
 # Perform a enrichment analysis for high nucleotide diversity regions in cluster2. Use the Biological Process as ontology
 ego_high_nucl_diversity_cluster2 <- enrichGO(gene = list_high_nucl_div_cluster2,
@@ -387,14 +254,6 @@ ego_high_nucl_diversity_cluster2 <- enrichGO(gene = list_high_nucl_div_cluster2,
 
 # View the results
 head(ego_high_nucl_diversity_cluster2)
-
-# Save the results
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_cluster2_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster2_bp_lv7)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_cluster2_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster2_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_cluster2_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster2_cc_lv4)
 
 write.csv(ego_high_nucl_diversity_cluster2, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_cluster2_high_nucl_diversity.csv")
 ```
@@ -418,47 +277,6 @@ head(high_nucl_div_cluster3,30)
 # Obtain a list with the Prudus ids
 list_high_nucl_div_cluster3 <- high_nucl_div_cluster3$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-
-ggo_high_nucl_div_cluster3_bp_lv7 <- groupGO(gene  =  list_high_nucl_div_cluster3,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_high_nucl_div_cluster3_mf_lv4 <- groupGO(gene  =  list_high_nucl_div_cluster3,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_nucl_div_cluster3_cc_lv4 <- groupGO(gene  =  list_high_nucl_div_cluster3,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_nucl_div_cluster3_bp_lv7 <-  barplot(ggo_high_nucl_div_cluster3_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster3_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_nucl_div_cluster3_mf_lv4 <-  barplot(ggo_high_nucl_div_cluster3_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster3_mf_lv4
-
-# Barplot of cellular components
-barplot_ggo_high_nucl_div_cluster3_cc_lv4 <-  barplot(ggo_high_nucl_div_cluster3_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_nucl_div_cluster3_cc_lv4
-
-
 # Perform a enrichment analysis for high nucleotide diversity regions in cluster3. Use the Biological Process as ontology
 ego_high_nucl_diversity_cluster3 <- enrichGO(gene = list_high_nucl_div_cluster3,
                 OrgDb = org.Pdulcis.eg.db,
@@ -474,11 +292,6 @@ head(ego_high_nucl_diversity_cluster3)
 
 # Save the results
 
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_cluster3_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster3_bp_lv7)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_cluster3_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster3_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_cluster3_nucleotide_diversity.png", barplot_ggo_high_nucl_div_cluster3_cc_lv4)
 
 write.csv(ego_high_nucl_diversity_cluster3, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_cluster3_high_nucl_diversity.csv")
 ```
@@ -502,46 +315,8 @@ head(Fst_high_almnd_vs_peach,30)
 # Obtain a list with the prudus ids
 list_fst_high_almond_vs_peach_Prudus <- Fst_high_almnd_vs_peach$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-ggo_high_fst_almond_vs_peach_bp_lv7 <- groupGO(gene  =  list_fst_high_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
 
-
-
-ggo_high_fst_almond_vs_peach_mf_lv4 <- groupGO(gene  =  list_fst_high_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_fst_almond_vs_peach_cc_lv4 <- groupGO(gene  =  list_fst_high_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_fst_almnd_vs_peach_bp_lv7 <-  barplot(ggo_high_fst_almond_vs_peach_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_almnd_vs_peach_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_fst_almnd_vs_peach_mf_lv4 <-  barplot(ggo_high_fst_almond_vs_peach_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_almnd_vs_peach_mf_lv4
-
-#Barplot of cellular components
-barplot_ggo_high_fst_almnd_vs_peach_cc_lv4 <-  barplot(ggo_high_fst_almond_vs_peach_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_almnd_vs_peach_cc_lv4
-
-#Enrichment analisis
+#Enrichment analysis
 ego_high_fst_almnd_vs_peach <- enrichGO(gene = list_fst_high_almond_vs_peach_Prudus,
                 OrgDb = org.Pdulcis.eg.db,
                 ont = "BP",  
@@ -554,13 +329,6 @@ ego_high_fst_almnd_vs_peach <- enrichGO(gene = list_fst_high_almond_vs_peach_Pru
 # View the data
 head(ego_high_fst_almnd_vs_peach)
 
-# Save the results
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_high_fst_almond_vs_peach.png", barplot_ggo_high_fst_almnd_vs_peach_bp_lv7)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_high_fst_almond_vs_peach.png", barplot_ggo_high_fst_almnd_vs_peach_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_high_fst_almond_vs_peach.png", barplot_ggo_high_fst_almnd_vs_peach_cc_lv4)
 
 write.csv(ego_high_fst_almnd_vs_peach, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_high_fst_almond_vs_peach.csv")
 ```
@@ -585,46 +353,6 @@ head(Fst_low_almnd_vs_peach,30)
 # Obtain a list with the prudus ids
 list_fst_low_almond_vs_peach_Prudus <- Fst_low_almnd_vs_peach$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-ggo_low_fst_almond_vs_peach_bp_lv7 <- groupGO(gene  =  list_fst_low_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_low_fst_almond_vs_peach_mf_lv4 <- groupGO(gene  =  list_fst_low_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_low_fst_almond_vs_peach_cc_lv4 <- groupGO(gene  =  list_fst_low_almond_vs_peach_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_low_fst_almnd_vs_peach_bp_lv7 <-  barplot(ggo_low_fst_almond_vs_peach_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_low_fst_almnd_vs_peach_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_low_fst_almnd_vs_peach_mf_lv4 <-  barplot(ggo_low_fst_almond_vs_peach_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_low_fst_almnd_vs_peach_mf_lv4
-
-#Barplot of cellular components
-barplot_ggo_low_fst_almnd_vs_peach_cc_lv4 <-  barplot(ggo_low_fst_almond_vs_peach_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_low_fst_almnd_vs_peach_cc_lv4
-
-
 # Enrichment analysis
 
 ego_low_fst_almnd_vs_peach <- enrichGO(gene = list_fst_low_almond_vs_peach_Prudus,
@@ -638,14 +366,6 @@ ego_low_fst_almnd_vs_peach <- enrichGO(gene = list_fst_low_almond_vs_peach_Prudu
 
 # Visualize the data
 head(ego_low_fst_almnd_vs_peach)
-
-# Save the results
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_low_fst_almond_vs_peach.png", barplot_ggo_low_fst_almnd_vs_peach_bp_lv7)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_low_fst_almond_vs_peach.png", barplot_ggo_low_fst_almnd_vs_peach_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_low_fst_almond_vs_peach.png", barplot_ggo_low_fst_almnd_vs_peach_cc_lv4)
 
 write.csv(ego_low_fst_almnd_vs_peach, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_low_fst_almond_vs_peach.csv")
 ```
@@ -664,44 +384,6 @@ head(Fst_high_cluster2_vs_cluster3,30)
 # Obtain a list with the prudus ids
 list_fst_high_cluster2_vs_cluster3_Prudus <- Fst_high_cluster2_vs_cluster3$PRUDU
 
-# Use the groupGO function for obtain the GO terms
-ggo_high_fst_cluster2_vs_cluster3_bp_lv7 <- groupGO(gene  =  list_fst_high_cluster2_vs_cluster3_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 7,
-               ont = "BP",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-
-ggo_high_fst_cluster2_vs_cluster3_mf_lv4 <- groupGO(gene  =  list_fst_high_cluster2_vs_cluster3_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "MF",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-
-ggo_high_fst_cluster2_vs_cluster3_cc_lv4 <- groupGO(gene  =  list_fst_high_cluster2_vs_cluster3_Prudus,
-               OrgDb    = org.Pdulcis.eg.db,
-               level    = 4,
-               ont = "CC",
-               keyType = "SYMBOL",
-               readable = TRUE)
-
-# Create the barplot
-
-# Barplot of biological processes
-barplot_ggo_high_fst_cluster2_vs_cluster3_bp_lv7 <-  barplot(ggo_high_fst_cluster2_vs_cluster3_bp_lv7, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_cluster2_vs_cluster3_bp_lv7
-
-# Barplot of molecular functions
-barplot_ggo_high_fst_cluster2_vs_cluster3_mf_lv4 <-  barplot(ggo_high_fst_cluster2_vs_cluster3_mf_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_cluster2_vs_cluster3_mf_lv4
-
-#Barplot of cellular components
-barplot_ggo_high_fst_cluster2_vs_cluster3_cc_lv4 <-  barplot(ggo_high_fst_cluster2_vs_cluster3_cc_lv4, drop=TRUE, showCategory=10)
-barplot_ggo_high_fst_cluster2_vs_cluster3_cc_lv4
 
 #Enrichment analysis
 ego_high_fst_cluster2_vs_cluster3 <- enrichGO(gene = list_fst_high_cluster2_vs_cluster3_Prudus,
@@ -717,12 +399,6 @@ ego_high_fst_cluster2_vs_cluster3 <- enrichGO(gene = list_fst_high_cluster2_vs_c
 head(ego_high_fst_cluster2_vs_cluster3)
 
 # Save the results
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_BP_ggo_high_fst_cluster2_vs_cluster3.png", barplot_ggo_high_fst_cluster2_vs_cluster3_bp_lv7)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_MF_ggo_high_fst_cluster2_vs_cluster3.png", barplot_ggo_high_fst_cluster2_vs_cluster3_mf_lv4)
-
-ggsave("Results_identification_significant_transcripts_and_protein_fastas/Barplot_CC_ggo_high_fst_cluster2_vs_cluster3.png", barplot_ggo_high_fst_cluster2_vs_cluster3_cc_lv4)
 
 write.csv(ego_high_fst_cluster2_vs_cluster3, "Results_identification_significant_transcripts_and_protein_fastas/Enrichment_analysis_high_fst_cluster2_vs_cluster3.csv")
 ```
